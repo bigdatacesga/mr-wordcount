@@ -1,3 +1,6 @@
+package wordcount;
+
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
@@ -15,7 +18,7 @@ import org.apache.hadoop.mapreduce.Job;
  * 
  * The following is the code for the driver class:
  */
-public class WordCount {
+public class Driver {
 
   public static void main(String[] args) throws Exception {
 
@@ -33,14 +36,15 @@ public class WordCount {
     /*
      * Instantiate a Job object for your job's configuration.  
      */
-    Job job = new Job();
+    Configuration conf = new Configuration();
+    Job job = Job.getInstance(conf);
     
     /*
      * Specify the jar file that contains your driver, mapper, and reducer.
      * Hadoop will transfer this jar file to nodes in your cluster running
      * mapper and reducer tasks.
      */
-    job.setJarByClass(WordCount.class);
+    job.setJarByClass(Driver.class);
     
     /*
      * Specify an easily-decipherable name for the job.
@@ -49,30 +53,12 @@ public class WordCount {
     job.setJobName("Word Count");
 
     /*
-     * Specify the paths to the input and output data based on the
-     * command-line arguments.
-     */
-    FileInputFormat.setInputPaths(job, new Path(args[0]));
-    FileOutputFormat.setOutputPath(job, new Path(args[1]));
-
-    /*
-     * Specify the mapper and reducer classes.
+     * Specify the mapper, combiner and reducer classes.
      */
     job.setMapperClass(WordMapper.class);
+    job.setCombinerClass(SumReducer.class);
     job.setReducerClass(SumReducer.class);
 
-    /*
-     * For the word count application, the input file and output 
-     * files are in text format - the default format.
-     * 
-     * In text format files, each record is a line delineated by a 
-     * by a line terminator.
-     * 
-     * When you use other input formats, you must call the 
-     * SetInputFormatClass method. When you use other 
-     * output formats, you must call the setOutputFormatClass method.
-     */
-      
     /*
      * For the word count application, the mapper's output keys and
      * values have the same data types as the reducer's output keys 
@@ -88,6 +74,25 @@ public class WordCount {
      */
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(IntWritable.class);
+    
+    /*
+     * For the word count application, the input file and output 
+     * files are in text format - the default format.
+     * 
+     * In text format files, each record is a line delineated by a 
+     * by a line terminator.
+     * 
+     * When you use other input formats, you must call the 
+     * SetInputFormatClass method. When you use other 
+     * output formats, you must call the setOutputFormatClass method.
+     */
+
+    /*
+     * Specify the paths to the input and output data based on the
+     * command-line arguments.
+     */
+    FileInputFormat.setInputPaths(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));    
 
     /*
      * Start the MapReduce job and wait for it to finish.
